@@ -1,0 +1,22 @@
+# 의존성 및 빌드 결과물 (가장 중요)
+node_modules
+
+# 빌드 결과물
+dist/
+
+# 환경 변수 및 로그
+.env
+.env.*
+*.log
+npm-debug.log*
+
+# Git 및 에디터 설정
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# Docker 관련
+docker-compose.yml
+Dockerfile
