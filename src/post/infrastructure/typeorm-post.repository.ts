@@ -20,7 +20,7 @@ export class TypeOrmPostRepository extends PostRepository {
   async findById(id: string): Promise<Post | null> {
     return await this.postRepository.findOne({
       where: { id },
-      relations: ['medias'],
+      relations: ['medias', 'category'],
     });
   }
 

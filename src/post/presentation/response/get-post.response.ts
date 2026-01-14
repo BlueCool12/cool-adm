@@ -19,7 +19,12 @@ export class GetPostResponse {
       {
         slug: result.slug,
         description: result.description,
-        categoryId: result.categoryId,
+        category: result.categoryName
+          ? {
+              id: result.categoryId!,
+              name: result.categoryName,
+            }
+          : null,
         status: result.status,
         publishedAt: result.publishedAt,
       },
@@ -32,7 +37,10 @@ export class GetPostResponse {
 class PublishInfoResponse {
   readonly slug: string | null;
   readonly description: string;
-  readonly categoryId: number | null;
+  readonly category?: {
+    readonly id: number;
+    readonly name: string;
+  } | null;
   readonly status: PostStatus;
   readonly publishedAt: Date | null;
 }
