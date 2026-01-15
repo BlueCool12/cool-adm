@@ -2,6 +2,8 @@ import { AuthCredential } from '@/auth/domain/auth-credential';
 import { User } from '@/user/domain/user.entity';
 
 export abstract class UserRepository {
+  abstract save(user: User): Promise<User>;
+
   abstract findByLoginId(loginId: string): Promise<AuthCredential | null>;
 
   abstract findById(id: string): Promise<User | null>;

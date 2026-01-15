@@ -2,18 +2,30 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '@/user/domain/user.entity';
 import { Repository } from 'typeorm';
 import { AuthCredential } from '@/auth/domain/auth-credential';
+import { UserRepository } from '../application/user.repository';
 
-export class TypeOrmUserRepository {
+export class TypeOrmUserRepository extends UserRepository {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {}
+  ) {
+    super();
+  }
+
+  async save(user: User): Promise<User> {
+    return await this.userRepository.save(user);
+  }
 
   async findByLoginId(loginId: string): Promise<AuthCredential | null> {
-    const user = await this.userRepository.findOne({ where: { loginId: loginId } });
+    const user = await this.userRepository.findOne({
+      where: {
+        ['loginId' as keyof User]: loginId,
+      },
+    });
     if (!user) return null;
 
-    return AuthCredential.restore(user);
+    const snapshot = user.getSnapshot();
+    return AuthCredential.restore(snapshot);
   }
 
   async findById(id: string): Promise<User | null> {

@@ -72,10 +72,10 @@ export class AuthService {
 
     return {
       id: user.id,
-      loginId: user.loginId,
+      loginId: user.getLoginId(),
       name: user.getName(),
       nickname: user.getNickname(),
-      role: user.role,
+      role: user.getRole(),
     };
   }
 
@@ -94,7 +94,7 @@ export class AuthService {
     if (!isOk) throw new UnauthorizedException('인증 정보가 일치하지 않습니다.');
 
     const [accessToken, newRefreshToken] = await Promise.all([
-      this.signAccessToken({ id: user.id, role: user.role }),
+      this.signAccessToken({ id: user.id, role: user.getRole() }),
       this.signRefreshToken({ id: user.id }),
     ]);
 

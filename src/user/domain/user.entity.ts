@@ -2,13 +2,22 @@ import { Column, Entity } from 'typeorm';
 import { UserRole } from './user-role.enum';
 import { CoreEntity } from '@/common/entity/base.entity';
 
+export interface UserSnapshot {
+  id: string;
+  loginId: string;
+  passwordHash: string;
+  failedAttempts: number;
+  lockedUntil: Date | null;
+  role: UserRole;
+}
+
 @Entity('user')
 export class User extends CoreEntity {
   @Column({ name: 'login_id', unique: true, length: 255 })
-  public readonly loginId: string;
+  private loginId: string;
 
   @Column({ name: 'password_hash', length: 60 })
-  public readonly passwordHash: string;
+  private passwordHash: string;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   private name: string | null;
@@ -17,7 +26,7 @@ export class User extends CoreEntity {
   private nickname: string | null;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
-  public readonly role: UserRole;
+  private role: UserRole;
 
   @Column({ name: 'failed_attempts', default: 0 })
   public readonly failedAttempts: number;
@@ -31,12 +40,55 @@ export class User extends CoreEntity {
   @Column({ name: 'last_login_at', type: 'timestamptz', nullable: true })
   private lastLoginAt: Date | null;
 
+  private constructor() {
+    super();
+  }
+
+  public static create(params: {
+    loginId: string;
+    passwordHash: string;
+    name: string;
+    nickname: string;
+    role: UserRole;
+  }): User {
+    const user = new User();
+
+    user.loginId = params.loginId;
+    user.passwordHash = params.passwordHash;
+    user.name = params.name;
+    user.nickname = params.nickname;
+    user.role = params.role;
+
+    return user;
+  }
+
+  // behavior
+
   // getter
+  public getLoginId(): string {
+    return this.loginId;
+  }
+
   public getName(): string | null {
     return this.name;
   }
 
   public getNickname(): string | null {
     return this.nickname;
+  }
+
+  public getRole(): UserRole {
+    return this.role;
+  }
+
+  public getSnapshot(): UserSnapshot {
+    return {
+      id: this.id,
+      loginId: this.loginId,
+      passwordHash: this.passwordHash,
+      failedAttempts: this.failedAttempts,
+      lockedUntil: this.lockedUntil,
+      role: this.role,
+    };
   }
 }
