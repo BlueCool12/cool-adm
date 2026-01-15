@@ -81,6 +81,14 @@ export class User extends CoreEntity {
     return this.role;
   }
 
+  public getLockedUntil(): Date | null {
+    return this.lockedUntil;
+  }
+
+  public getLastLoginAt(): Date | null {
+    return this.lastLoginAt;
+  }
+
   public getSnapshot(): UserSnapshot {
     return {
       id: this.id,

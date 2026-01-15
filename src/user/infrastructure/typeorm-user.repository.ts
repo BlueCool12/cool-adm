@@ -3,6 +3,7 @@ import { User } from '@/user/domain/user.entity';
 import { Repository } from 'typeorm';
 import { AuthCredential } from '@/auth/domain/auth-credential';
 import { UserRepository } from '../application/user.repository';
+import { UserRole } from '../domain/user-role.enum';
 
 export class TypeOrmUserRepository extends UserRepository {
   constructor(
@@ -14,6 +15,17 @@ export class TypeOrmUserRepository extends UserRepository {
 
   async save(user: User): Promise<User> {
     return await this.userRepository.save(user);
+  }
+
+  async saveAuthStatus(snapshot: ReturnType<AuthCredential['getSnapshot']>): Promise<void> {
+    await this.userRepository.update(snapshot.id, {
+      failedAttempts: snapshot.failedAttempts,
+      lockedUntil: snapshot.lockedUntil,
+    });
+  }
+
+  async findById(id: string): Promise<User | null> {
+    return await this.userRepository.findOne({ where: { id } });
   }
 
   async findByLoginId(loginId: string): Promise<AuthCredential | null> {
@@ -28,15 +40,28 @@ export class TypeOrmUserRepository extends UserRepository {
     return AuthCredential.restore(snapshot);
   }
 
-  async findById(id: string): Promise<User | null> {
-    return await this.userRepository.findOne({ where: { id } });
-  }
+  async findAll(options: {
+    skip: number;
+    take: number;
+    role?: UserRole;
+    search?: string;
+  }): Promise<[User[], number]> {
+    const query = this.userRepository.createQueryBuilder('user');
 
-  async saveAuthStatus(snapshot: ReturnType<AuthCredential['getSnapshot']>): Promise<void> {
-    await this.userRepository.update(snapshot.id, {
-      failedAttempts: snapshot.failedAttempts,
-      lockedUntil: snapshot.lockedUntil,
-    });
+    if (options.role) query.andWhere('user.role = :role', { role: options.role });
+
+    if (options.search) {
+      query.andWhere(
+        '(user.login_id LIKE :search OR user.name LIKE :search OR user.nickname LIKE :search)',
+        { search: `%${options.search}%` },
+      );
+    }
+
+    return await query
+      .skip(options.skip)
+      .take(options.take)
+      .orderBy('user.lastLoginAt', 'DESC')
+      .getManyAndCount();
   }
 
   async updateRefreshToken(userId: string, hash: string | null): Promise<void> {
