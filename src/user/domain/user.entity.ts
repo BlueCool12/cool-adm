@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { UserRole } from './user-role.enum';
+import { UserRole } from '@/user/domain/user-role.enum';
 import { CoreEntity } from '@/common/entity/base.entity';
 
 export interface UserSnapshot {
@@ -63,6 +63,18 @@ export class User extends CoreEntity {
   }
 
   // behavior
+  public update(params: {
+    name: string;
+    nickname: string;
+    role: UserRole;
+    passwordHash?: string;
+  }): void {
+    this.name = params.name;
+    this.nickname = params.nickname;
+    this.role = params.role;
+
+    if (params.passwordHash) this.passwordHash = params.passwordHash;
+  }
 
   // getter
   public getLoginId(): string {
