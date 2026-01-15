@@ -1,9 +1,9 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '@/user/domain/user.entity';
 import { Repository } from 'typeorm';
+import { User } from '@/user/domain/user.entity';
+import { UserRole } from '@/user/domain/user-role.enum';
 import { AuthCredential } from '@/auth/domain/auth-credential';
-import { UserRepository } from '../application/user.repository';
-import { UserRole } from '../domain/user-role.enum';
+import { UserRepository } from '@/user/application/user.repository';
 
 export class TypeOrmUserRepository extends UserRepository {
   constructor(
@@ -68,5 +68,9 @@ export class TypeOrmUserRepository extends UserRepository {
     await this.userRepository.update(userId, {
       refreshTokenHash: hash,
     });
+  }
+
+  async remove(userId: string): Promise<void> {
+    await this.userRepository.delete(userId);
   }
 }
