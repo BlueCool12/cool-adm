@@ -51,6 +51,7 @@ export class UserController {
   }
 
   @Patch(':id')
+  @Roles(UserRole.ADMIN)
   async update(@Param('id') id: string, @Body() request: UpdateUserRequest): Promise<void> {
     const command = new UpdateUserCommand(
       id,
