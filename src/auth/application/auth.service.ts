@@ -30,8 +30,8 @@ export class AuthService {
         return await bcrypt.compare(raw, hashed);
       });
 
-      await this.userRepository.saveAuthStatus(credential.getSnapshot());
       const snapshot = credential.getSnapshot();
+      await this.userRepository.saveAuthStatus(snapshot);
 
       const userProfile = await this.userRepository.findById(snapshot.id);
       if (!userProfile) throw new NotFoundException('사용자 정보를 찾을 수 없습니다.');

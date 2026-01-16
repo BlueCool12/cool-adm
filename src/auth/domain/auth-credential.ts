@@ -20,6 +20,7 @@ export class AuthCredential {
     private failedAttempts: number = 0,
     private lockedUntil: Date | null = null,
     private readonly role: UserRole,
+    private lastLoginAt: Date | null = null,
   ) {}
 
   public static restore(params: {
@@ -29,6 +30,7 @@ export class AuthCredential {
     failedAttempts: number;
     lockedUntil: Date | null;
     role: UserRole;
+    lastLoginAt: Date | null;
   }): AuthCredential {
     return new AuthCredential(
       params.id,
@@ -37,6 +39,7 @@ export class AuthCredential {
       params.failedAttempts,
       params.lockedUntil,
       params.role,
+      params.lastLoginAt,
     );
   }
 
@@ -71,6 +74,7 @@ export class AuthCredential {
   private resetStatus() {
     this.failedAttempts = 0;
     this.lockedUntil = null;
+    this.lastLoginAt = new Date();
   }
 
   public getSnapshot() {
@@ -81,6 +85,7 @@ export class AuthCredential {
       failedAttempts: this.failedAttempts,
       lockedUntil: this.lockedUntil,
       role: this.role,
+      lastLoginAt: this.lastLoginAt,
     };
   }
 }

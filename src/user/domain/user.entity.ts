@@ -9,6 +9,7 @@ export interface UserSnapshot {
   failedAttempts: number;
   lockedUntil: Date | null;
   role: UserRole;
+  lastLoginAt: Date | null;
 }
 
 @Entity('user')
@@ -41,7 +42,7 @@ export class User extends CoreEntity {
   public readonly refreshTokenHash: string | null;
 
   @Column({ name: 'last_login_at', type: 'timestamptz', nullable: true })
-  private lastLoginAt: Date | null;
+  public readonly lastLoginAt: Date | null;
 
   private constructor() {
     super();
@@ -109,10 +110,6 @@ export class User extends CoreEntity {
     return this.lockedUntil;
   }
 
-  public getLastLoginAt(): Date | null {
-    return this.lastLoginAt;
-  }
-
   public getSnapshot(): UserSnapshot {
     return {
       id: this.id,
@@ -121,6 +118,7 @@ export class User extends CoreEntity {
       failedAttempts: this.failedAttempts,
       lockedUntil: this.lockedUntil,
       role: this.role,
+      lastLoginAt: this.lastLoginAt,
     };
   }
 }

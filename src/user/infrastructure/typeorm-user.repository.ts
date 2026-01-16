@@ -21,11 +21,12 @@ export class TypeOrmUserRepository extends UserRepository {
     await this.userRepository.update(snapshot.id, {
       failedAttempts: snapshot.failedAttempts,
       lockedUntil: snapshot.lockedUntil,
+      lastLoginAt: snapshot.lastLoginAt,
     });
   }
 
   async findById(id: string): Promise<User | null> {
-    return await this.userRepository.findOne({ where: { id } });
+    return await this.userRepository.findOne({ where: { id: id } });
   }
 
   async findByLoginId(loginId: string): Promise<AuthCredential | null> {
@@ -65,12 +66,10 @@ export class TypeOrmUserRepository extends UserRepository {
   }
 
   async updateRefreshToken(userId: string, hash: string | null): Promise<void> {
-    await this.userRepository.update(userId, {
-      refreshTokenHash: hash,
-    });
+    await this.userRepository.update({ id: userId }, { refreshTokenHash: hash });
   }
 
   async remove(userId: string): Promise<void> {
-    await this.userRepository.delete(userId);
+    await this.userRepository.delete({ id: userId });
   }
 }
