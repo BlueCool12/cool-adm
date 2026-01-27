@@ -62,16 +62,14 @@ export class TypeOrmAnalyticsRepository extends AnalyticsRepository {
     }
 
     const result = await this.pageViewRepository.query<AvgDurationResult[]>(
-      `
-            SELECT AVG(EXTRACT(EPOCH FROM (max_time - min_time))) as avg_duration
-            FROM (
-              SELECT MAX(created_at) as max_time, MIN(created_at) as min_time
-              FROM page_view
-              WHERE created_at BETWEEN $1 AND $2
-              GROUP BY ip_address
-              HAVING COUNT(*) > 1
-            ) sub
-          `,
+      `SELECT AVG(EXTRACT(EPOCH FROM (max_time - min_time))) as avg_duration
+        FROM (
+          SELECT MAX(created_at) as max_time, MIN(created_at) as min_time
+          FROM page_view
+          WHERE created_at BETWEEN $1 AND $2
+          GROUP BY session_id
+          HAVING COUNT(*) > 1
+        ) sub`,
       [start, end],
     );
 
@@ -140,6 +138,9 @@ export class TypeOrmAnalyticsRepository extends AnalyticsRepository {
           WHEN pv.referrer LIKE '%google%' THEN 'Google'
           WHEN pv.referrer LIKE '%naver%' THEN 'Naver'
           WHEN pv.referrer LIKE '%daum%' THEN 'Daum'
+          WHEN pv.referrer LIKE '%github%' THEN 'GitHub'
+          WHEN pv.referrer LIKE '%okky%' THEN 'OKKY'
+          WHEN pv.referrer LIKE '%jobkorea%' THEN 'JobKorea'
           WHEN pv.referrer LIKE '%facebook%' OR pv.referrer LIKE '%instagram%' THEN 'Social'
           WHEN pv.referrer IS NULL OR pv.referrer = '' THEN 'Direct'
           ELSE 'Others'
@@ -155,16 +156,10 @@ export class TypeOrmAnalyticsRepository extends AnalyticsRepository {
   async getDeviceStats(): Promise<ReferrerData[]> {
     return this.pageViewRepository
       .createQueryBuilder('pv')
-      .select(
-        `CASE
-          WHEN pv.userAgent LIKE '%Mobile%' OR pv.userAgent LIKE '%Android%' OR pv.userAgent LIKE '%iPhone%' THEN 'Mobile'
-          WHEN pv.userAgent LIKE '%Tablet%' OR pv.userAgent LIKE '%iPad%' THEN 'Tablet'
-          ELSE 'Desktop'
-        END`,
-        'label',
-      )
+      .select('INITCAP(pv.device_type)', 'label')
       .addSelect('COUNT(*)', 'value')
-      .groupBy('"label"')
+      .where("pv.device_type != 'bot'")
+      .groupBy('pv.device_type')
       .orderBy('"value"', 'DESC')
       .getRawMany<ReferrerData>();
   }
