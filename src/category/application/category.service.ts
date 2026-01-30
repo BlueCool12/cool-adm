@@ -14,10 +14,13 @@ import { CreateCategoryResult } from '@/category/application/result/create-categ
 import { GetCategoryTreeResult } from '@/category/application/result/get-category-tree.result';
 
 import { PostService } from '@/post/application/post.service';
+import { ReorderCategoryCommand } from './command/reorder-category.command';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class CategoryService {
   constructor(
+    private readonly dataSource: DataSource,
     private readonly categoryRepository: CategoryRepository,
     private readonly postService: PostService,
   ) {}
@@ -59,6 +62,17 @@ export class CategoryService {
     });
 
     return roots;
+  }
+
+  async reorder(command: ReorderCategoryCommand): Promise<void> {
+    const { ids } = command;
+
+    await this.dataSource.transaction(async (manager) => {
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        await manager.update(Category, id, { sortOrder: i });
+      }
+    });
   }
 
   async update(command: UpdateCategoryCommand): Promise<void> {
