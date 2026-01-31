@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+
 import { Post } from '@/post/domain/post.entity';
+
+import { GetPostsQuery } from '@/post/application/query/get-posts.query';
+import { UpdatePostCommand } from '@/post/application/command/update-post.command';
+
 import { PostRepository } from '@/post/application/post.repository';
+import { MediaService } from '@/media/application/service/media.service';
+
 import { CreatePostResult } from '@/post/application/result/create-post.result';
 import { GetPostResult } from '@/post/application/result/get-post.result';
-import { UpdatePostCommand } from '@/post/application/command/update-post.command';
-import { MediaService } from '@/media/application/media.service';
 import { GetPostsResult } from '@/post/application/result/get-posts.result';
-import { GetPostsQuery } from './query/get-posts.query';
 
 @Injectable()
 export class PostService {

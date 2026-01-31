@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { MediaRepository } from '@/media/application/media.repository';
-import { FileUploader } from '@/media/application/file-uploader';
+
 import { Media } from '@/media/domain/media.entity';
+
 import { UploadFileCommand } from '@/media/application/command/upload-file.command';
+
+import { FileUploader } from '@/media/application/file-uploader';
 import { MetadataExtractor } from '@/media/application/metadata-extractor';
+import { MediaRepository } from '@/media/application/media.repository';
 
 @Injectable()
 export class MediaService {
