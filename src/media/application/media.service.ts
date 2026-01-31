@@ -24,7 +24,7 @@ export class MediaService {
     const media = Media.create({
       type: type,
       storedName,
-      originalName: file.originalname,
+      originalName: file.originalname.normalize('NFC'),
       mimeType: file.mimetype,
       metadata: metadata,
       postId: postId,
