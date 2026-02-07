@@ -51,17 +51,20 @@ export class PostController {
   }
 
   @Get('suggest/topic')
+  @Roles(UserRole.ADMIN)
   async suggestTopic(): Promise<{ category: string; topic: string }> {
     return await this.postService.suggestTopic();
   }
 
   @Post('suggest/slug')
+  @Roles(UserRole.ADMIN)
   async suggestSlug(@Body('title') title: string): Promise<{ slug: string }> {
     const slug = await this.postService.suggestSlug(title);
     return { slug };
   }
 
   @Post('suggest/summary')
+  @Roles(UserRole.ADMIN)
   async suggestSummary(
     @Body('content') content: string,
   ): Promise<{ summary: string }> {
