@@ -15,6 +15,7 @@ import { JwtAuthGuard } from '@/auth/presentation/guards/jwt-auth.guard';
 import { RolesGuard } from '@/auth/presentation/guards/roles.guard';
 import { UserModule } from '@/user/user.module';
 import { AnalyticsModule } from '@/analytics/analytics.module';
+import { AiModule } from '@/ai/ai.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -47,10 +48,11 @@ import { ScheduleModule } from '@nestjs/schedule';
     CategoryModule,
     CommentModule,
     AnalyticsModule,
+    AiModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
-export class AppModule {}
+export class AppModule { }
