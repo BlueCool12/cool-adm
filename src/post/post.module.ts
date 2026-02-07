@@ -6,9 +6,10 @@ import { PostRepository } from '@/post/application/post.repository';
 import { TypeOrmPostRepository } from '@/post/infrastructure/typeorm-post.repository';
 import { PostController } from '@/post/presentation/post.controller';
 import { MediaModule } from '@/media/media.module';
+import { AiModule } from '@/ai/ai.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post]), MediaModule],
+  imports: [TypeOrmModule.forFeature([Post]), MediaModule, AiModule],
   controllers: [PostController],
   providers: [
     PostService,
@@ -19,4 +20,4 @@ import { MediaModule } from '@/media/media.module';
   ],
   exports: [PostService],
 })
-export class PostModule {}
+export class PostModule { }

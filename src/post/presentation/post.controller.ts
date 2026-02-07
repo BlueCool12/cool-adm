@@ -21,13 +21,13 @@ import { RolesGuard } from '@/auth/presentation/guards/roles.guard';
 import { Roles } from '@/auth/presentation/decorators/roles.decorator';
 import { UserRole } from '@/user/domain/user-role.enum';
 import { JwtAuthGuard } from '@/auth/presentation/guards/jwt-auth.guard';
-import { GetPostsRequest } from './request/get-posts.request';
-import { GetPostsQuery } from '../application/query/get-posts.query';
+import { GetPostsRequest } from '@/post/presentation/request/get-posts.request';
+import { GetPostsQuery } from '@/post/application/query/get-posts.query';
 
 @Controller('posts')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PostController {
-  constructor(private readonly postService: PostService) {}
+  constructor(private readonly postService: PostService) { }
 
   @Post()
   @Roles(UserRole.ADMIN)
@@ -48,6 +48,25 @@ export class PostController {
     const result = await this.postService.getPosts(query);
 
     return GetPostListResponse.fromResult(result);
+  }
+
+  @Get('suggest/topic')
+  async suggestTopic(): Promise<{ category: string; topic: string }> {
+    return await this.postService.suggestTopic();
+  }
+
+  @Post('suggest/slug')
+  async suggestSlug(@Body('title') title: string): Promise<{ slug: string }> {
+    const slug = await this.postService.suggestSlug(title);
+    return { slug };
+  }
+
+  @Post('suggest/summary')
+  async suggestSummary(
+    @Body('content') content: string,
+  ): Promise<{ summary: string }> {
+    const summary = await this.postService.suggestSummary(content);
+    return { summary };
   }
 
   @Patch(':id')

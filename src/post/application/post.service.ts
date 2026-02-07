@@ -7,6 +7,7 @@ import { UpdatePostCommand } from '@/post/application/command/update-post.comman
 
 import { PostRepository } from '@/post/application/post.repository';
 import { MediaService } from '@/media/application/service/media.service';
+import { AiService } from '@/ai/application/ai.service';
 
 import { CreatePostResult } from '@/post/application/result/create-post.result';
 import { GetPostResult } from '@/post/application/result/get-post.result';
@@ -17,7 +18,8 @@ export class PostService {
   constructor(
     private readonly postRepository: PostRepository,
     private readonly mediaService: MediaService,
-  ) {}
+    private readonly aiService: AiService,
+  ) { }
 
   async createDraft(): Promise<CreatePostResult> {
     const post = Post.createDraft();
@@ -77,6 +79,18 @@ export class PostService {
 
   async countByCategoryId(categoryId: number): Promise<number> {
     return await this.postRepository.countByCategoryId(categoryId);
+  }
+
+  async suggestTopic(): Promise<{ category: string; topic: string }> {
+    return await this.aiService.suggestTopic();
+  }
+
+  async suggestSlug(title: string): Promise<string> {
+    return await this.aiService.suggestSlug(title);
+  }
+
+  async suggestSummary(content: string): Promise<string> {
+    return await this.aiService.suggestSummary(content);
   }
 
   private async getById(id: string): Promise<Post> {
