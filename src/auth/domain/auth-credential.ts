@@ -21,7 +21,7 @@ export class AuthCredential {
     private lockedUntil: Date | null = null,
     private readonly role: UserRole,
     private lastLoginAt: Date | null = null,
-  ) {}
+  ) { }
 
   public static restore(params: {
     id: string;
@@ -52,7 +52,7 @@ export class AuthCredential {
     const isMatch = await verifier(inputPassword, this.passwordHash);
     if (!isMatch) {
       this.handleFailedAttempt();
-      throw new AuthDomainError('인증에 실패했습니다.', 'UNAUTHORIZED');
+      throw new AuthDomainError('아이디 또는 비밀번호가 일치하지 않습니다.', 'UNAUTHORIZED');
     }
 
     this.resetStatus();

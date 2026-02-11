@@ -9,30 +9,29 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
 } from '@nestjs/common';
-import { UserService } from '@/user/application/user.service';
-import { CreateUserRequest } from '@/user/presentation/request/create-user.request';
-import { CreateUserCommand } from '@/user/application/command/create-user.command';
-import { JwtAuthGuard } from '@/auth/presentation/guards/jwt-auth.guard';
-import { RolesGuard } from '@/auth/presentation/guards/roles.guard';
-import { Roles } from '@/auth/presentation/decorators/roles.decorator';
+
+import { User } from '@/user/domain/user.entity';
 import { UserRole } from '@/user/domain/user-role.enum';
+
+import { Roles } from '@/auth/presentation/decorators/roles.decorator';
+import { CurrentUser } from '@/auth/presentation/decorators/current-user.decorator';
+import { CreateUserRequest } from '@/user/presentation/request/create-user.request';
 import { GetUsersRequest } from '@/user/presentation/request/get-users-request';
-import { GetUsersQuery } from '@/user/application/query/get-users.query';
 import { GetUsersResponse } from '@/user/presentation/response/get-users.response';
 import { UpdateUserRequest } from '@/user/presentation/request/update-user.request';
-import { UpdateUserCommand } from '@/user/application/command/update-user.command';
-import { CurrentUser } from '@/auth/presentation/decorators/current-user.decorator';
-import { User } from '@/user/domain/user.entity';
 import { UpdateProfileRequest } from '@/user/presentation/request/update-profile.request';
-import { UpdateProfileCommand } from '@/user/application/command/update-profile.command';
 import { UpdateProfileResponse } from '@/user/presentation/response/update-profile.response';
 
+import { UserService } from '@/user/application/user.service';
+import { CreateUserCommand } from '@/user/application/command/create-user.command';
+import { GetUsersQuery } from '@/user/application/query/get-users.query';
+import { UpdateUserCommand } from '@/user/application/command/update-user.command';
+import { UpdateProfileCommand } from '@/user/application/command/update-profile.command';
+
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Post()
   @Roles(UserRole.ADMIN)

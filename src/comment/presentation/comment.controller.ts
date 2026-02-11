@@ -8,27 +8,26 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '@/auth/presentation/guards/jwt-auth.guard';
-import { Roles } from '@/auth/presentation/decorators/roles.decorator';
-import { RolesGuard } from '@/auth/presentation/guards/roles.guard';
+
 import { UserRole } from '@/user/domain/user-role.enum';
+import { CommentStatus } from '@/comment/domain/comment-status.enum';
+
+import { Roles } from '@/auth/presentation/decorators/roles.decorator';
 import { GetUser } from '@/user/presentation/decorators/get-user.decorator';
 import { CurrentUserPayload } from '@/auth/presentation/types/auth-request.type';
-import { CommentService } from '@/comment/application/comment.service';
-import { CommentStatus } from '@/comment/domain/comment-status.enum';
-import { GetCommentsRequest } from '@/comment/presentation/request/get-comments.request';
 import { CreateReplyRequest } from '@/comment/presentation/request/create-reply.request';
+import { GetCommentsRequest } from '@/comment/presentation/request/get-comments.request';
 import { GetCommentsResponse } from '@/comment/presentation/response/get-comments.response';
-import { GetCommentsQuery } from '../application/query/get-comments.query';
+
+import { CommentService } from '@/comment/application/comment.service';
 import { CreateReplyCommand } from '@/comment/application/command/create-reply.command';
+import { GetCommentsQuery } from '@/comment/application/query/get-comments.query';
 import { UpdateCommentStatusCommand } from '@/comment/application/command/update-comment-status.command';
 
 @Controller('comments')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class CommentController {
-  constructor(private readonly commentService: CommentService) {}
+  constructor(private readonly commentService: CommentService) { }
 
   @Get()
   async findAll(@Query() request: GetCommentsRequest): Promise<GetCommentsResponse> {

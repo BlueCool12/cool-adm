@@ -5,7 +5,6 @@ import {
   ParseFilePipeBuilder,
   Post,
   UploadedFile,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -13,20 +12,15 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { MediaType } from '@/media/domain/media-type.enum';
 import { UserRole } from '@/user/domain/user-role.enum';
 
+import { Roles } from '@/auth/presentation/decorators/roles.decorator';
 import { UploadMediaResponse } from '@/media/presentation/response/upload-media.response';
 
-import { Roles } from '@/auth/presentation/decorators/roles.decorator';
-import { RolesGuard } from '@/auth/presentation/guards/roles.guard';
-import { JwtAuthGuard } from '@/auth/presentation/guards/jwt-auth.guard';
-
+import { MediaService } from '@/media/application/service/media.service';
 import { UploadFileCommand } from '@/media/application/command/upload-file.command';
 
-import { MediaService } from '@/media/application/service/media.service';
-
 @Controller('media')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class MediaController {
-  constructor(private readonly mediaService: MediaService) {}
+  constructor(private readonly mediaService: MediaService) { }
 
   @Post('images')
   @Roles(UserRole.ADMIN)

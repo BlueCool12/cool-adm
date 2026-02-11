@@ -9,23 +9,22 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
-import { CategoryService } from '@/category/application/category.service';
+
+import { UserRole } from '@/user/domain/user-role.enum';
+
+import { Roles } from '@/auth/presentation/decorators/roles.decorator';
 import { CreateCategoryRequest } from '@/category/presentation/request/create-category.request';
 import { CreateCategoryResponse } from '@/category/presentation/response/create-category.response';
 import { GetCategoryTreeResponse } from '@/category/presentation/response/get-category-tree.response';
 import { UpdateCategoryRequest } from '@/category/presentation/request/update-category.request';
-import { JwtAuthGuard } from '@/auth/presentation/guards/jwt-auth.guard';
-import { RolesGuard } from '@/auth/presentation/guards/roles.guard';
-import { Roles } from '@/auth/presentation/decorators/roles.decorator';
-import { UserRole } from '@/user/domain/user-role.enum';
-import { ReorderCategoryRequest } from './request/reorder-category.request';
+import { ReorderCategoryRequest } from '@/category/presentation/request/reorder-category.request';
+
+import { CategoryService } from '@/category/application/category.service';
 
 @Controller('categories')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class CategoryController {
-  constructor(private readonly categoryService: CategoryService) {}
+  constructor(private readonly categoryService: CategoryService) { }
 
   @Post()
   @Roles(UserRole.ADMIN)

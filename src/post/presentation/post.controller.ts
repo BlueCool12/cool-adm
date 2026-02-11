@@ -9,23 +9,22 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
 } from '@nestjs/common';
-import { PostService } from '@/post/application/post.service';
+
+import { UserRole } from '@/user/domain/user-role.enum';
+
+import { Roles } from '@/auth/presentation/decorators/roles.decorator';
 import { CreatePostResponse } from '@/post/presentation/response/create-post.response';
 import { GetPostResponse } from '@/post/presentation/response/get-post.response';
-import { UpdatePostCommand } from '@/post/application/command/update-post.command';
-import { UpdatePostRequest } from '@/post/presentation/request/update-post.request';
-import { GetPostListResponse } from '@/post/presentation/response/get-post-list.response';
-import { RolesGuard } from '@/auth/presentation/guards/roles.guard';
-import { Roles } from '@/auth/presentation/decorators/roles.decorator';
-import { UserRole } from '@/user/domain/user-role.enum';
-import { JwtAuthGuard } from '@/auth/presentation/guards/jwt-auth.guard';
 import { GetPostsRequest } from '@/post/presentation/request/get-posts.request';
+import { GetPostListResponse } from '@/post/presentation/response/get-post-list.response';
+import { UpdatePostRequest } from '@/post/presentation/request/update-post.request';
+
+import { PostService } from '@/post/application/post.service';
 import { GetPostsQuery } from '@/post/application/query/get-posts.query';
+import { UpdatePostCommand } from '@/post/application/command/update-post.command';
 
 @Controller('posts')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class PostController {
   constructor(private readonly postService: PostService) { }
 

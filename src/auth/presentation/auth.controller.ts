@@ -1,26 +1,26 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
-import { AuthService } from '@/auth/application/auth.service';
-import { Public } from '@/auth/presentation/decorators/public.decorator';
-import { LoginRequest } from '@/auth/presentation/request/login.request';
-
-import { AuthGuard } from '@nestjs/passport';
-import { CurrentUser } from '@/auth/presentation/decorators/current-user.decorator';
 import { CookieOptions, Response } from 'express';
-import { JwtAuthGuard } from '@/auth/presentation/guards/jwt-auth.guard';
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { ConfigService } from '@nestjs/config';
+
+import { Public } from '@/auth/presentation/decorators/public.decorator';
+import { CurrentUser } from '@/auth/presentation/decorators/current-user.decorator';
 import {
   CurrentUserPayload,
   RequestWithRefreshToken,
 } from '@/auth/presentation/types/auth-request.type';
+import { LoginRequest } from '@/auth/presentation/request/login.request';
 import { LoginResponse } from '@/auth/presentation/response/login.response';
-import { ConfigService } from '@nestjs/config';
 import { AuthUserResponse } from '@/user/presentation/response/auth-user.response';
+
+import { AuthService } from '@/auth/application/auth.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   @Public()
   @Post('login')
@@ -34,7 +34,6 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(JwtAuthGuard)
   async me(@CurrentUser() user: CurrentUserPayload): Promise<AuthUserResponse> {
     const result = await this.authService.findMe(user.id);
     return AuthUserResponse.fromResult(result);
@@ -54,7 +53,6 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseGuards(JwtAuthGuard)
   async logout(@CurrentUser() user: CurrentUserPayload, @Res({ passthrough: true }) res: Response) {
     await this.authService.logout(user.id);
     this.clearRefreshTokenCookie(res);
