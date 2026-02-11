@@ -8,7 +8,7 @@ import { AiService } from '@/ai/application/ai.service';
 @Module({
   imports: [
     HttpModule.register({
-      timeout: 30000,
+      timeout: 120000,
       maxRedirects: 5,
     }),
     ConfigModule,
