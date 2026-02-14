@@ -14,7 +14,7 @@ export class GetPostResult {
     readonly publishedAt: Date | null,
     readonly createdAt: Date,
     readonly updatedAt: Date,
-  ) {}
+  ) { }
 
   static fromEntity(post: Post): GetPostResult {
     return new GetPostResult(
@@ -22,7 +22,7 @@ export class GetPostResult {
       post.getTitle(),
       post.getContent(),
       post.getCategoryId(),
-      post.category?.getName(),
+      post.getCategory()?.getName() || null,
       post.getSlug(),
       post.getDescription(),
       post.getStatus(),

@@ -43,7 +43,7 @@ export class Post extends BaseEntity {
 
   @ManyToOne(() => Category)
   @JoinColumn({ name: 'category_id' })
-  public readonly category: Category;
+  private category: Category | null;
 
   @OneToMany(() => Media, (media) => media.post)
   public readonly medias: Media[];
@@ -182,6 +182,10 @@ export class Post extends BaseEntity {
 
   public getStatus(): PostStatus {
     return this.status;
+  }
+
+  public getCategory(): Category | null {
+    return this.category;
   }
 
   public getPublishedAt(): Date | null {
