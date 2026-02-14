@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 
 import { Post } from '@/post/domain/post.entity';
 
 import { GetPostsQuery } from '@/post/application/query/get-posts.query';
 import { UpdatePostCommand } from '@/post/application/command/update-post.command';
+import { PostStatus } from '@/post/domain/post-status.enum';
 
 import { PostRepository } from '@/post/application/post.repository';
 import { MediaService } from '@/media/application/service/media.service';
@@ -16,6 +18,7 @@ import { GetPostsResult } from '@/post/application/result/get-posts.result';
 @Injectable()
 export class PostService {
   constructor(
+    private readonly dataSource: DataSource,
     private readonly postRepository: PostRepository,
     private readonly mediaService: MediaService,
     private readonly aiService: AiService,
@@ -49,32 +52,52 @@ export class PostService {
   }
 
   async updatePost(command: UpdatePostCommand): Promise<GetPostResult> {
-    const { id, title, content, contentJson, slug, description, categoryId, status } =
+    const { id, title, content, contentJson, contentMarkdown, slug, description, categoryId, status } =
       command.props;
-    const post = await this.getById(id);
 
-    if (post.medias) {
-      await this.mediaService.syncMediaUsage(post.medias, content);
-    }
+    const savedPost = await this.dataSource.transaction(async (manager) => {
+      const post = await this.getById(id);
+      const previousStatus = post.getStatus();
 
-    post.updateDetails({
-      title: title,
-      content: content,
-      contentJson: contentJson,
-      slug: slug,
-      description: description,
-      categoryId: categoryId,
+      if (post.medias) {
+        await this.mediaService.syncMediaUsage(post.medias, content, manager);
+      }
+
+      post.updateDetails({ title, content, contentJson, slug, description, categoryId });
+      post.changeStatus(status);
+
+      const saved = await this.postRepository.save(post, manager);
+      return { saved, previousStatus };
     });
 
-    post.changeStatus(status);
+    const { saved: finalPost, previousStatus } = savedPost;
 
-    const savedPost = await this.postRepository.save(post);
-    return GetPostResult.fromEntity(savedPost);
+    if (finalPost.getStatus() === PostStatus.PUBLISHED) {
+      this.getById(finalPost.id).then(freshPost => {
+        this.aiService.indexPost({
+          id: freshPost.id,
+          title: freshPost.getTitle(),
+          slug: freshPost.getSlug() || '',
+          description: freshPost.getDescription(),
+          content: contentMarkdown,
+          category: freshPost.getCategory()!.getName(),
+          publishedAt: freshPost.getPublishedAt()!,
+        });
+      });
+    } else if (previousStatus === PostStatus.PUBLISHED) {
+      this.aiService.deletePostIndex(id);
+    }
+
+    return GetPostResult.fromEntity(finalPost);
   }
 
   async deletePost(id: string): Promise<void> {
-    await this.getById(id);
+    const post = await this.getById(id);
     await this.postRepository.delete(id);
+
+    if (post.getStatus() === PostStatus.PUBLISHED) {
+      this.aiService.deletePostIndex(id);
+    }
   }
 
   async countByCategoryId(categoryId: number): Promise<number> {

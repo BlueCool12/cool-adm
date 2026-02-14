@@ -12,8 +12,10 @@ export class UpdatePostRequest {
   content: string;
 
   @IsString()
-  @IsOptional()
-  contentJson?: string;
+  contentJson: string;
+
+  @IsString()
+  contentMarkdown: string;
 
   @IsString()
   @IsOptional()

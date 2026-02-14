@@ -1,7 +1,8 @@
+import { EntityManager } from 'typeorm';
 import { Post } from '@/post/domain/post.entity';
 
 export abstract class PostRepository {
-  abstract save(post: Post): Promise<Post>;
+  abstract save(post: Post, manager?: EntityManager): Promise<Post>;
 
   abstract findById(id: string): Promise<Post | null>;
 

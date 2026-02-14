@@ -4,7 +4,8 @@ export interface UpdatePostCommandProps {
   readonly id: string;
   readonly title: string;
   readonly content: string;
-  readonly contentJson?: string;
+  readonly contentJson: string;
+  readonly contentMarkdown: string;
   readonly slug: string;
   readonly description: string;
   readonly categoryId: number;

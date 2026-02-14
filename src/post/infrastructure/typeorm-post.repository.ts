@@ -1,4 +1,4 @@
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, EntityManager, Repository } from 'typeorm';
 import { PostRepository } from '@/post/application/post.repository';
 import { Post } from '@/post/domain/post.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,8 +13,9 @@ export class TypeOrmPostRepository extends PostRepository {
     super();
   }
 
-  async save(post: Post): Promise<Post> {
-    return await this.postRepository.save(post);
+  async save(post: Post, manager?: EntityManager): Promise<Post> {
+    const repo = manager ? manager.getRepository(Post) : this.postRepository;
+    return await repo.save(post);
   }
 
   async findById(id: string): Promise<Post | null> {
