@@ -1,16 +1,29 @@
 import { Module } from '@nestjs/common';
-import { HttpModule } from '@nestjs/axios';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 import { AiController } from '@/ai/presentation/ai.controller';
 import { AiService } from '@/ai/application/ai.service';
 
 @Module({
   imports: [
-    HttpModule.register({
-      timeout: 120000,
-      maxRedirects: 5,
-    }),
+    ClientsModule.registerAsync([
+      {
+        name: 'AI_CLIENT',
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.getOrThrow<string>('RABBITMQ_URL')],
+            queue: configService.getOrThrow<string>('AI_SERVICE_QUEUE'),
+            queueOptions: {
+              durable: true,
+            },
+          },
+        }),
+      },
+    ]),
     ConfigModule,
   ],
   controllers: [AiController],
