@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-
 import { AiController } from '@/ai/presentation/ai.controller';
 import { AiService } from '@/ai/application/ai.service';
 
@@ -10,7 +9,6 @@ import { AiService } from '@/ai/application/ai.service';
     ClientsModule.registerAsync([
       {
         name: 'AI_CLIENT',
-        imports: [ConfigModule],
         inject: [ConfigService],
         useFactory: (configService: ConfigService) => ({
           transport: Transport.RMQ,
@@ -24,7 +22,6 @@ import { AiService } from '@/ai/application/ai.service';
         }),
       },
     ]),
-    ConfigModule,
   ],
   controllers: [AiController],
   providers: [AiService],
