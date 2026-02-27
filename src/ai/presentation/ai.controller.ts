@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { AiService } from '@/ai/application/ai.service';
-import { ChatRequest } from '@/ai/presentation/request/chat.request';
-import { ChatResponse } from '@/ai/presentation/response/chat.response';
-import { GetJobStatusResponse } from '@/ai/presentation/response/get-job-status.response';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { UserRole } from '@/user/domain/user-role.enum';
 import { Roles } from '@/auth/presentation/decorators/roles.decorator';
+import { ChatRequest } from '@/ai/presentation/request/chat.request';
+import { SuggestSlugRequest } from '@/ai/presentation/request/suggest-slug.request';
+import { SuggestSummaryRequest } from '@/ai/presentation/request/suggest-summary.request';
+import { AiJobResponse } from '@/ai/presentation/response/ai-job.response';
+import { GetJobStatusResponse } from '@/ai/presentation/response/get-job-status.response';
+import { AiService } from '@/ai/application/ai.service';
 
 @Controller('ai')
 export class AiController {
@@ -12,14 +14,35 @@ export class AiController {
 
   @Post('chat')
   @Roles(UserRole.ADMIN)
-  async chat(@Body() request: ChatRequest): Promise<ChatResponse> {
+  async chat(@Body() request: ChatRequest): Promise<AiJobResponse> {
     const result = await this.aiService.chat(request.message);
-    return ChatResponse.from(result);
+    return AiJobResponse.from(result);
+  }
+
+  @Get('suggest/topic')
+  @Roles(UserRole.ADMIN)
+  async suggestTopic(): Promise<AiJobResponse> {
+    const result = await this.aiService.suggestTopic();
+    return AiJobResponse.from(result);
+  }
+
+  @Post('suggest/slug')
+  @Roles(UserRole.ADMIN)
+  async suggestSlug(@Body() request: SuggestSlugRequest): Promise<AiJobResponse> {
+    const result = await this.aiService.suggestSlug(request.title);
+    return AiJobResponse.from(result);
+  }
+
+  @Post('suggest/summary')
+  @Roles(UserRole.ADMIN)
+  async suggestSummary(@Body() request: SuggestSummaryRequest): Promise<AiJobResponse> {
+    const result = await this.aiService.suggestSummary(request.content);
+    return AiJobResponse.from(result);
   }
 
   @Get('jobs/:jobId')
   @Roles(UserRole.ADMIN)
-  async getJobStatus(@Param('jobId') jobId: string): Promise<GetJobStatusResponse> {
+  async getJobStatus(@Param('jobId', ParseUUIDPipe) jobId: string): Promise<GetJobStatusResponse> {
     const task = await this.aiService.getJobStatus(jobId);
     return GetJobStatusResponse.from(task);
   }
