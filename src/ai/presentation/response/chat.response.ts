@@ -1,8 +1,11 @@
-
 export class ChatResponse {
-  reply: string;
+  readonly jobId: string;
 
-  constructor(reply: string) {
-    this.reply = reply;
+  private constructor(jobId: string) {
+    this.jobId = jobId;
+  }
+
+  static from(result: { jobId: string }): ChatResponse {
+    return new ChatResponse(result.jobId);
   }
 }
