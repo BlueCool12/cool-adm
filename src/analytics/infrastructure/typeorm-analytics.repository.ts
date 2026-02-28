@@ -9,6 +9,7 @@ import {
   DailyVisitData,
   MostViewedPostData,
   PostPerformanceData,
+  RecentCommentData,
   ReferrerData,
 } from '@/analytics/domain/types/analytics.types';
 
@@ -193,7 +194,7 @@ export class TypeOrmAnalyticsRepository extends AnalyticsRepository {
       .getCount();
   }
 
-  async getRecentComments(): Promise<any[]> {
+  async getRecentComments(): Promise<RecentCommentData[]> {
     return this.commentRepository
       .createQueryBuilder('c')
       .where('c.adminId IS NULL')
@@ -205,7 +206,7 @@ export class TypeOrmAnalyticsRepository extends AnalyticsRepository {
       ])
       .orderBy('c.createdAt', 'DESC')
       .take(4)
-      .getRawMany();
+      .getRawMany<RecentCommentData>();
   }
 
   async getTotalPostCount(): Promise<number> {

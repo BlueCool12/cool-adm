@@ -2,6 +2,7 @@ import {
   DailyVisitData,
   MostViewedPostData,
   PostPerformanceData,
+  RecentCommentData,
   ReferrerData,
 } from '@/analytics/domain/types/analytics.types';
 
@@ -29,7 +30,8 @@ export abstract class AnalyticsRepository {
 
   abstract getPendingCommentCount(): Promise<number>;
 
-  abstract getRecentComments(): Promise<any[]>;
+  abstract getRecentComments(): Promise<RecentCommentData[]>;
 
   abstract getTotalPostCount(): Promise<number>;
 }
+
