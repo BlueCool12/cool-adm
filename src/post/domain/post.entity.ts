@@ -191,4 +191,8 @@ export class Post extends BaseEntity {
   public getPublishedAt(): Date | null {
     return this.publishedAt;
   }
+
+  public getContentJson(): string | null {
+    return this.contentJson;
+  }
 }

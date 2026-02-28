@@ -6,24 +6,26 @@ export class GetPostResponse {
     readonly id: string,
     readonly title: string,
     readonly content: string,
+    readonly contentJson: string | null,
     readonly publishInfo: PublishInfoResponse,
     readonly createdAt: Date,
     readonly updatedAt: Date,
-  ) {}
+  ) { }
 
   static fromResult(result: GetPostResult): GetPostResponse {
     return new GetPostResponse(
       result.id,
       result.title,
       result.content,
+      result.contentJson,
       {
         slug: result.slug,
         description: result.description,
         category: result.categoryName
           ? {
-              id: result.categoryId!,
-              name: result.categoryName,
-            }
+            id: result.categoryId!,
+            name: result.categoryName,
+          }
           : null,
         status: result.status,
         publishedAt: result.publishedAt,
