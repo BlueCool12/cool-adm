@@ -1,27 +1,36 @@
 import { Controller, Get, Query, ValidationPipe } from '@nestjs/common';
-import { AnalyticsService } from '../application/analytics.service';
-import { AnalyticsSummaryResponse } from './response/analytics-summary.response';
-import { getTrafficRequest } from './request/get-traffic.request';
-import { GetTrafficQuery } from '../application/query/get-traffic.query';
-import { TrafficDataResponse } from './response/traffic-data.response';
-import { GetTopPostsRequest } from './request/get-top-posts.request';
-import { GetTopPostsQuery } from '../application/query/get-top-posts.query';
-import { TopPostResponse } from './response/top-post.response';
-import { GetPostPerformanceRequest } from './request/get-post-performance.request';
+import { AnalyticsService } from '@/analytics/application/analytics.service';
+import { getTrafficRequest } from '@/analytics/presentation/request/get-traffic.request';
+import { GetTopPostsRequest } from '@/analytics/presentation/request/get-top-posts.request';
+import { GetPostPerformanceRequest } from '@/analytics/presentation/request/get-post-performance.request';
+import { AnalyticsSummaryResponse } from '@/analytics/presentation/response/analytics-summary.response';
+import { TrafficDataResponse } from '@/analytics/presentation/response/traffic-data.response';
+import { TopPostResponse } from '@/analytics/presentation/response/top-post.response';
 import {
   PaginatedPostPerformanceResponse,
   PostPerformanceResponse,
-} from './response/post-performance.response';
-import { GetPostPerformanceQuery } from '../application/query/get-post-performance.query';
-import { DistributionResponse } from './response/distribution.response';
+} from '@/analytics/presentation/response/post-performance.response';
+import { DistributionResponse } from '@/analytics/presentation/response/distribution.response';
+import { DashboardSummaryResponse } from '@/analytics/presentation/response/dashboard-summary.response';
+import { RecentCommentResponse } from '@/analytics/presentation/response/recent-comment.response';
+import { GetTrafficQuery } from '@/analytics/application/query/get-traffic.query';
+import { GetTopPostsQuery } from '@/analytics/application/query/get-top-posts.query';
+import { GetPostPerformanceQuery } from '@/analytics/application/query/get-post-performance.query';
 
 @Controller('analytics')
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  constructor(private readonly analyticsService: AnalyticsService) { }
 
-  @Get('dashboard')
-  async getDashboardStats() {
-    return this.analyticsService.getDashboardStats();
+  @Get('dashboard/summary')
+  async getDashboardSummary(): Promise<DashboardSummaryResponse> {
+    const result = await this.analyticsService.getDashboardSummary();
+    return DashboardSummaryResponse.from(result);
+  }
+
+  @Get('comments/recent')
+  async getRecentComments(): Promise<RecentCommentResponse[]> {
+    const results = await this.analyticsService.getRecentComments();
+    return results.map((result) => RecentCommentResponse.from(result));
   }
 
   @Get('summary')
@@ -69,3 +78,4 @@ export class AnalyticsController {
     return results.map((result) => DistributionResponse.from(result));
   }
 }
+

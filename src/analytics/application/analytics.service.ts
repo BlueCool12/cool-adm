@@ -7,51 +7,46 @@ import {
   getStartDate,
   getTodayComparisonRanges,
 } from '@/analytics/domain/analytics.logic';
-import { TrafficData, TrafficRange } from '../domain/types/analytics.types';
-import { AnalyticsSummaryResult } from './result/analytics-summary.result';
-import { GetTrafficQuery } from './query/get-traffic.query';
-import { TrafficDataResult } from './result/traffic-data.result';
-import { GetTopPostsQuery } from './query/get-top-posts.query';
-import { MostViewedPostResult } from './result/most-viewed-post.result';
-import { GetPostPerformanceQuery } from './query/get-post-performance.query';
+import { TrafficData, TrafficRange } from '@/analytics/domain/types/analytics.types';
+import { AnalyticsSummaryResult } from '@/analytics/application/result/analytics-summary.result';
+import { GetTrafficQuery } from '@/analytics/application/query/get-traffic.query';
+import { TrafficDataResult } from '@/analytics/application/result/traffic-data.result';
+import { GetTopPostsQuery } from '@/analytics/application/query/get-top-posts.query';
+import { MostViewedPostResult } from '@/analytics/application/result/most-viewed-post.result';
+import { GetPostPerformanceQuery } from '@/analytics/application/query/get-post-performance.query';
 import {
   PaginatedPostPerformanceResult,
   PostPerformanceResult,
-} from './result/post-performance.result';
-import { DistributionResult } from './result/distribution.result';
+} from '@/analytics/application/result/post-performance.result';
+import { DistributionResult } from '@/analytics/application/result/distribution.result';
+import { DashboardSummaryResult } from '@/analytics/application/result/dashboard-summary.result';
+import { RecentCommentResult } from '@/analytics/application/result/recent-comment.result';
 
 @Injectable()
 export class AnalyticsService {
-  constructor(private readonly analyticsRepository: AnalyticsRepository) {}
+  constructor(private readonly analyticsRepository: AnalyticsRepository) { }
 
-  async getDashboardStats() {
+  async getDashboardSummary(): Promise<DashboardSummaryResult> {
     const { todayStart, todayEnd } = getTodayComparisonRanges();
 
-    const [todayPv, todayUv, pendingComments, totalPosts, weeklyTopPosts, trafficRaw] =
-      await Promise.all([
-        this.analyticsRepository.getPvCount(todayStart, todayEnd),
-        this.analyticsRepository.getUvCount(todayStart, todayEnd),
-        this.analyticsRepository.getPendingCommentCount(),
-        this.analyticsRepository.getTotalPostCount(),
-        this.getMostViewedPosts({ limit: 3 }),
-        this.analyticsRepository.getTrafficRawData(getStartDate(7)),
-      ]);
+    const [todayPv, todayUv, pendingComments, totalPosts] = await Promise.all([
+      this.analyticsRepository.getPvCount(todayStart, todayEnd),
+      this.analyticsRepository.getUvCount(todayStart, todayEnd),
+      this.analyticsRepository.getPendingCommentCount(),
+      this.analyticsRepository.getTotalPostCount(),
+    ]);
 
-    const trend = fillEmptyDates(trafficRaw, 7, getStartDate(7));
+    const result = new DashboardSummaryResult();
+    result.todayPv = todayPv;
+    result.todayUv = todayUv;
+    result.pendingComments = pendingComments;
+    result.totalPosts = totalPosts;
+    return result;
+  }
 
-    const recentComments = await this.analyticsRepository.getRecentComments();
-
-    return {
-      summary: {
-        todayPv,
-        todayUv,
-        pendingComments,
-        totalPosts,
-      },
-      trend,
-      recentComments,
-      weeklyTopPosts,
-    };
+  async getRecentComments(): Promise<RecentCommentResult[]> {
+    const rawData = await this.analyticsRepository.getRecentComments();
+    return rawData.map((item) => RecentCommentResult.from(item));
   }
 
   async getAnalyticsSummary(): Promise<AnalyticsSummaryResult[]> {
