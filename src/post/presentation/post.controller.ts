@@ -19,10 +19,13 @@ import { GetPostResponse } from '@/post/presentation/response/get-post.response'
 import { GetPostsRequest } from '@/post/presentation/request/get-posts.request';
 import { GetPostListResponse } from '@/post/presentation/response/get-post-list.response';
 import { UpdatePostRequest } from '@/post/presentation/request/update-post.request';
+import { AutoSavePostRequest } from '@/post/presentation/request/auto-save-post.request';
 
 import { PostService } from '@/post/application/post.service';
 import { GetPostsQuery } from '@/post/application/query/get-posts.query';
 import { UpdatePostCommand } from '@/post/application/command/update-post.command';
+import { AutoSavePostCommand } from '@/post/application/command/auto-save-post.command';
+import { GetAutoSaveResult } from '@/post/application/result/get-auto-save.result';
 
 @Controller('posts')
 export class PostController {
@@ -35,10 +38,15 @@ export class PostController {
     return CreatePostResponse.fromResult(result);
   }
 
-  @Get(':id')
-  async getPost(@Param('id') id: string): Promise<GetPostResponse> {
-    const result = await this.postService.getPost(id);
-    return GetPostResponse.fromResult(result);
+  @Post(':id/autosave')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async autoSave(
+    @Param('id') id: string,
+    @Body() request: AutoSavePostRequest,
+  ): Promise<void> {
+    const command = new AutoSavePostCommand({ id, ...request });
+    await this.postService.autoSave(command);
   }
 
   @Get()
@@ -47,6 +55,18 @@ export class PostController {
     const result = await this.postService.getPosts(query);
 
     return GetPostListResponse.fromResult(result);
+  }
+
+  @Get(':id')
+  async getPost(@Param('id') id: string): Promise<GetPostResponse> {
+    const result = await this.postService.getPost(id);
+    return GetPostResponse.fromResult(result);
+  }
+
+  @Get(':id/autosave')
+  @Roles(UserRole.ADMIN)
+  async getAutoSave(@Param('id') id: string): Promise<GetAutoSaveResult | null> {
+    return await this.postService.getAutoSave(id);
   }
 
   @Patch(':id')
