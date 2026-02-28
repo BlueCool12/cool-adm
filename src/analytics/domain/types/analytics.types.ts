@@ -34,3 +34,10 @@ export interface MostViewedPostData {
   title: string;
   views: string;
 }
+
+export interface RecentCommentData {
+  id: string;
+  nickname: string;
+  content: string;
+  createdAt: Date;
+}
