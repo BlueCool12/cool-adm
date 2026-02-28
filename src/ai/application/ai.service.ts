@@ -1,126 +1,76 @@
-
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { ConfigService } from '@nestjs/config';
-import { firstValueFrom } from 'rxjs';
+import { Injectable, InternalServerErrorException, Inject, Logger, NotFoundException } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { v4 as uuidv4 } from 'uuid';
+import { AiTaskStatus } from '@/ai/domain/ai-task-status.enum';
+import { AiTaskResult } from '@/ai/domain/ai-task-result.interface';
+import { RedisService } from '@/common/redis/redis.service';
+import { IndexPostCommand } from '@/ai/application/command/index-post.command';
 
 @Injectable()
 export class AiService {
-  private readonly aiServerUrl: string;
+  private readonly logger = new Logger(AiService.name);
+  private readonly TASK_TTL = 3600;
 
   constructor(
-    private readonly httpService: HttpService,
-    private readonly configService: ConfigService,
-  ) {
-    this.aiServerUrl = this.configService.getOrThrow<string>('AI_SERVER_URL');
-  }
+    @Inject('AI_CLIENT') private readonly aiClient: ClientProxy,
+    private readonly redisService: RedisService,
+  ) { }
 
-  async suggestTopic(): Promise<{ category: string; topic: string }> {
-    try {
-      const { data } = await firstValueFrom(
-        this.httpService.get<{ category: string; topic: string }>(
-          `${this.aiServerUrl}/posts/suggest/topic`,
-        ),
-      );
-      return data;
-    } catch (error) {
-      console.error('Failed to get suggestion from AI server:', error);
-      throw new InternalServerErrorException(
-        'Failed to get suggestion from AI server',
-      );
+  async getJobStatus(jobId: string): Promise<AiTaskResult> {
+    const task = await this.redisService.get<AiTaskResult>(`ai_task:${jobId}`);
+    if (!task) {
+      throw new NotFoundException('Task not found');
     }
+    return task;
   }
 
-  async suggestSlug(title: string): Promise<string> {
-    try {
-      const { data } = await firstValueFrom(
-        this.httpService.post<{ slug: string }>(
-          `${this.aiServerUrl}/posts/suggest/slug`,
-          { title },
-        ),
-      );
-      return data.slug;
-    } catch (error) {
-      console.error('Failed to get slug suggestion from AI server:', error);
-      throw new InternalServerErrorException(
-        'Failed to get slug suggestion from AI server',
-      );
-    }
+  async chat(message: string): Promise<{ jobId: string }> {
+    return this.createJob('chat', { message });
   }
 
-  async chat(message: string): Promise<string> {
-    try {
-      const { data } = await firstValueFrom(
-        this.httpService.post<{ reply: string }>(`${this.aiServerUrl}/chat`, {
-          message,
-        }),
-      );
-      return data.reply;
-    } catch (error) {
-      console.error('Failed to chat with AI server:', error);
-      throw new InternalServerErrorException('Failed to chat with AI server');
-    }
+  async suggestTopic(): Promise<{ jobId: string }> {
+    return this.createJob('suggest_topic', {});
   }
 
-  async suggestSummary(content: string): Promise<string> {
-    try {
-      const { data } = await firstValueFrom(
-        this.httpService.post<{ summary: string }>(
-          `${this.aiServerUrl}/posts/suggest/summary`,
-          { content },
-        ),
-      );
-      return data.summary;
-    } catch (error) {
-      console.error('Failed to get summary from AI server:', error);
-      throw new InternalServerErrorException(
-        'Failed to get summary from AI server',
-      );
-    }
+  async suggestSlug(title: string): Promise<{ jobId: string }> {
+    return this.createJob('suggest_slug', { title });
   }
 
-  async indexPost(params: {
-    id: string;
-    title: string;
-    slug: string;
-    description: string;
-    content: string;
-    category: string;
-    publishedAt: Date;
-  }): Promise<boolean> {
-    try {
-      const { data } = await firstValueFrom(
-        this.httpService.post<{ status: string }>(
-          `${this.aiServerUrl}/posts/index`,
-          {
-            id: params.id,
-            title: params.title,
-            slug: params.slug,
-            description: params.description,
-            content: params.content,
-            category: params.category,
-            published_at: params.publishedAt.toISOString(),
-          },
-        ),
-      );
-      return data.status === 'success';
-    } catch (error) {
-      console.error('Failed to index post on AI server:', error);
-      return false;
-    }
+  async suggestSummary(content: string): Promise<{ jobId: string }> {
+    return this.createJob('suggest_summary', { content });
   }
 
-  async deletePostIndex(id: string): Promise<boolean> {
+  async indexPost(params: IndexPostCommand): Promise<{ jobId: string }> {
+    return this.createJob('index_post', {
+      id: params.id,
+      title: params.title,
+      slug: params.slug,
+      description: params.description,
+      content: params.content,
+      category: params.category,
+      published_at: params.publishedAt.toISOString(),
+    });
+  }
+
+  async deletePostIndex(id: string): Promise<{ jobId: string }> {
+    return this.createJob('delete_post_index', { id });
+  }
+
+  private async createJob(type: string, payload: Record<string, unknown>): Promise<{ jobId: string }> {
     try {
-      const { data } = await firstValueFrom(
-        this.httpService.delete<{ status: string }>(
-          `${this.aiServerUrl}/posts/${id}/index`,
-        ),
-      );
-      return data.status === 'success';
+      const jobId = uuidv4();
+      const initialTask: AiTaskResult = {
+        status: AiTaskStatus.PENDING,
+        createdAt: Date.now(),
+      };
+
+      await this.redisService.set(`ai_task:${jobId}`, initialTask, this.TASK_TTL);
+      this.aiClient.emit({ cmd: type }, { jobId, ...payload });
+
+      return { jobId };
     } catch (error) {
-      console.error('Failed to delete post index from AI server:', error);
-      return false;
+      this.logger.error(`Failed to create ${type} job`, error instanceof Error ? error.stack : error);
+      throw new InternalServerErrorException('Failed to process AI request');
     }
   }
 }

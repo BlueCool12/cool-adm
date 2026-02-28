@@ -17,6 +17,7 @@ import { UserModule } from '@/user/user.module';
 import { AnalyticsModule } from '@/analytics/analytics.module';
 import { AiModule } from '@/ai/ai.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { RedisModule } from '@/common/redis/redis.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       envFilePath: '.env',
     }),
     ScheduleModule.forRoot(),
+    RedisModule.register(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

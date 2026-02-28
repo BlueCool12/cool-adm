@@ -104,18 +104,6 @@ export class PostService {
     return await this.postRepository.countByCategoryId(categoryId);
   }
 
-  async suggestTopic(): Promise<{ category: string; topic: string }> {
-    return await this.aiService.suggestTopic();
-  }
-
-  async suggestSlug(title: string): Promise<string> {
-    return await this.aiService.suggestSlug(title);
-  }
-
-  async suggestSummary(content: string): Promise<string> {
-    return await this.aiService.suggestSummary(content);
-  }
-
   private async getById(id: string): Promise<Post> {
     const post = await this.postRepository.findById(id);
     if (!post) throw new NotFoundException(`해당 ID(${id})의 게시글을 찾을 수 없습니다.`);
