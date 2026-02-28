@@ -2,18 +2,20 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
 import { Post } from '@/post/domain/post.entity';
-
-import { GetPostsQuery } from '@/post/application/query/get-posts.query';
-import { UpdatePostCommand } from '@/post/application/command/update-post.command';
 import { PostStatus } from '@/post/domain/post-status.enum';
 
-import { PostRepository } from '@/post/application/post.repository';
+import { RedisService } from '@/common/redis/redis.service';
 import { MediaService } from '@/media/application/service/media.service';
 import { AiService } from '@/ai/application/ai.service';
-
+import { PostRepository } from '@/post/application/post.repository';
+import { GetPostsQuery } from '@/post/application/query/get-posts.query';
+import { UpdatePostCommand } from '@/post/application/command/update-post.command';
+import { AutoSavePostCommand } from './command/auto-save-post.command';
 import { CreatePostResult } from '@/post/application/result/create-post.result';
 import { GetPostResult } from '@/post/application/result/get-post.result';
 import { GetPostsResult } from '@/post/application/result/get-posts.result';
+import { GetAutoSaveResult } from './result/get-auto-save.result';
+
 
 @Injectable()
 export class PostService {
@@ -22,7 +24,31 @@ export class PostService {
     private readonly postRepository: PostRepository,
     private readonly mediaService: MediaService,
     private readonly aiService: AiService,
+    private readonly redisService: RedisService,
   ) { }
+
+  private getAutoSaveKey(id: string): string {
+    return `post:autosave:${id}`;
+  }
+
+  async autoSave(command: AutoSavePostCommand): Promise<void> {
+    const { id, ...data } = command.props;
+    await this.getById(id);
+
+    const key = this.getAutoSaveKey(id);
+    await this.redisService.set(key, { ...data, savedAt: new Date() }, 604800); // 7 days TTL
+  }
+
+  async getAutoSave(id: string): Promise<GetAutoSaveResult | null> {
+    const key = this.getAutoSaveKey(id);
+    const data = await this.redisService.get(key);
+    return data ? GetAutoSaveResult.fromData(data) : null;
+  }
+
+  async clearAutoSave(id: string): Promise<void> {
+    const key = this.getAutoSaveKey(id);
+    await this.redisService.del(key);
+  }
 
   async createDraft(): Promise<CreatePostResult> {
     const post = Post.createDraft();
@@ -71,6 +97,7 @@ export class PostService {
     });
 
     const { saved: finalPost, previousStatus } = savedPost;
+    await this.clearAutoSave(id);
 
     if (finalPost.getStatus() === PostStatus.PUBLISHED) {
       this.getById(finalPost.id).then(freshPost => {
@@ -85,7 +112,7 @@ export class PostService {
         });
       });
     } else if (previousStatus === PostStatus.PUBLISHED) {
-      this.aiService.deletePostIndex(id);
+      await this.aiService.deletePostIndex(id);
     }
 
     return GetPostResult.fromEntity(finalPost);
@@ -93,10 +120,13 @@ export class PostService {
 
   async deletePost(id: string): Promise<void> {
     const post = await this.getById(id);
-    await this.postRepository.delete(id);
+    const status = post.getStatus();
 
-    if (post.getStatus() === PostStatus.PUBLISHED) {
-      this.aiService.deletePostIndex(id);
+    await this.postRepository.delete(id);
+    await this.clearAutoSave(id);
+
+    if (status === PostStatus.PUBLISHED) {
+      await this.aiService.deletePostIndex(id);
     }
   }
 
