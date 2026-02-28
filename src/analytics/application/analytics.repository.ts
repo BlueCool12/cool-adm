@@ -3,7 +3,7 @@ import {
   MostViewedPostData,
   PostPerformanceData,
   RecentCommentData,
-  ReferrerData,
+  DistributionData,
 } from '@/analytics/domain/types/analytics.types';
 
 export abstract class AnalyticsRepository {
@@ -24,9 +24,9 @@ export abstract class AnalyticsRepository {
     limit: number,
   ): Promise<{ data: PostPerformanceData[]; total: number }>;
 
-  abstract getReferrerStats(): Promise<ReferrerData[]>;
+  abstract getReferrerStats(): Promise<DistributionData[]>;
 
-  abstract getDeviceStats(): Promise<ReferrerData[]>;
+  abstract getDeviceStats(): Promise<DistributionData[]>;
 
   abstract getPendingCommentCount(): Promise<number>;
 

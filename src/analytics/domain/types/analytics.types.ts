@@ -15,7 +15,7 @@ export interface DailyVisitData {
   uv: string;
 }
 
-export interface ReferrerData {
+export interface DistributionData {
   label: string;
   value: string;
 }

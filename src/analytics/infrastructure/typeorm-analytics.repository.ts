@@ -10,7 +10,7 @@ import {
   MostViewedPostData,
   PostPerformanceData,
   RecentCommentData,
-  ReferrerData,
+  DistributionData,
 } from '@/analytics/domain/types/analytics.types';
 
 @Injectable()
@@ -151,38 +151,40 @@ export class TypeOrmAnalyticsRepository extends AnalyticsRepository {
     return { data, total };
   }
 
-  async getReferrerStats(): Promise<ReferrerData[]> {
-    return this.pageViewRepository
-      .createQueryBuilder('pv')
-      .select(
-        `CASE
-          WHEN pv.referrer LIKE '%google%' THEN 'Google'
-          WHEN pv.referrer LIKE '%naver%' THEN 'Naver'
-          WHEN pv.referrer LIKE '%daum%' THEN 'Daum'
-          WHEN pv.referrer LIKE '%github%' THEN 'GitHub'
-          WHEN pv.referrer LIKE '%okky%' THEN 'OKKY'
-          WHEN pv.referrer LIKE '%jobkorea%' THEN 'JobKorea'
-          WHEN pv.referrer LIKE '%facebook%' OR pv.referrer LIKE '%instagram%' THEN 'Social'
-          WHEN pv.referrer IS NULL OR pv.referrer = '' THEN 'Direct'
-          ELSE 'Others'
-        END`,
-        'label',
-      )
-      .addSelect('COUNT(*)', 'value')
-      .groupBy('"label"')
-      .orderBy('"value"', 'DESC')
-      .getRawMany<ReferrerData>();
+  async getReferrerStats(): Promise<DistributionData[]> {
+    return this.pageViewRepository.query<DistributionData[]>(
+      `SELECT label, COUNT(*) AS value
+       FROM (
+         SELECT DISTINCT ON (session_id)
+           CASE
+             WHEN referrer LIKE '%google%' THEN 'Google'
+             WHEN referrer LIKE '%naver%' THEN 'Naver'
+             WHEN referrer LIKE '%daum%' THEN 'Daum'
+             WHEN referrer LIKE '%github%' THEN 'GitHub'
+             WHEN referrer LIKE '%okky%' THEN 'OKKY'
+             WHEN referrer LIKE '%jobkorea%' THEN 'JobKorea'
+             WHEN referrer LIKE '%facebook%' OR referrer LIKE '%instagram%' THEN 'Social'
+             WHEN referrer IS NULL OR referrer = '' THEN 'Direct'
+             ELSE 'Others'
+           END AS label
+         FROM page_view
+         WHERE session_id IS NOT NULL
+         ORDER BY session_id, created_at ASC
+       ) sub
+       GROUP BY label
+       ORDER BY value DESC`,
+    );
   }
 
-  async getDeviceStats(): Promise<ReferrerData[]> {
+  async getDeviceStats(): Promise<DistributionData[]> {
     return this.pageViewRepository
       .createQueryBuilder('pv')
       .select('INITCAP(pv.device_type)', 'label')
-      .addSelect('COUNT(*)', 'value')
+      .addSelect('COUNT(DISTINCT pv.session_id)', 'value')
       .where("pv.device_type != 'bot'")
       .groupBy('pv.device_type')
       .orderBy('"value"', 'DESC')
-      .getRawMany<ReferrerData>();
+      .getRawMany<DistributionData>();
   }
 
   async getPendingCommentCount(): Promise<number> {
