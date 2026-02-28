@@ -19,7 +19,7 @@ export class AiController {
     return AiJobResponse.from(result);
   }
 
-  @Get('suggest/topic')
+  @Post('suggest/topic')
   @Roles(UserRole.ADMIN)
   async suggestTopic(): Promise<AiJobResponse> {
     const result = await this.aiService.suggestTopic();
