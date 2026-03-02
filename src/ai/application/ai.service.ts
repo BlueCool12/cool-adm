@@ -40,6 +40,10 @@ export class AiService {
     return this.createJob('suggest_summary', { content });
   }
 
+  async generateImage(content: string): Promise<{ jobId: string }> {
+    return this.createJob('generate_image', { content });
+  }
+
   async indexPost(params: IndexPostCommand): Promise<{ jobId: string }> {
     return this.createJob('index_post', {
       id: params.id,
