@@ -9,7 +9,7 @@ export class MediaCleanupService {
   constructor(
     private readonly fileManager: FileManager,
     private readonly mediaUsageRepository: MediaUsageRepository,
-  ) {}
+  ) { }
 
   async execute(): Promise<void> {
     this.logger.log('🧹 미사용 이미지 정리 시작...');
@@ -21,7 +21,7 @@ export class MediaCleanupService {
 
     let deletedCount = 0;
     const now = Date.now();
-    const ONE_DAY = 24 * 60 * 60 * 1000;
+    const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
 
     for (const filename of storedFiles) {
       if (usedImages.has(filename)) continue;
@@ -29,7 +29,7 @@ export class MediaCleanupService {
       const metadata = await this.fileManager.getFileMetadata(filename);
       if (!metadata) continue;
 
-      if (now - metadata.birthtimeMs < ONE_DAY) continue;
+      if (now - metadata.birthtimeMs < ONE_MONTH) continue;
 
       await this.fileManager.deleteFile(filename);
       deletedCount++;

@@ -5,9 +5,9 @@ import { MediaCleanupService } from '@/media/application/service/media-cleanup.s
 
 @Injectable()
 export class MediaCleanupScheduler {
-  constructor(private readonly mediaCleanupService: MediaCleanupService) {}
+  constructor(private readonly mediaCleanupService: MediaCleanupService) { }
 
-  @Cron(CronExpression.EVERY_DAY_AT_4AM, {
+  @Cron('0 4 1 * *', {
     timeZone: 'Asia/Seoul',
   })
   async handleCron() {
